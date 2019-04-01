@@ -1,0 +1,40 @@
+From 475019160c3c05887b630a0216e89b265f5a2df1 Mon Sep 17 00:00:00 2001
+From: Bastien Nocera <hadess@hadess.net>
+Date: Tue, 2 Apr 2019 01:35:57 +0200
+Subject: [PATCH] gba: Print some Rumble debug
+
+Prints "RUMBLE" followed by the new state and the number of cycles on
+stdout, and a comma-separated number of cycles and new state on stderr,
+to be captured.
+---
+ src/gba/hardware.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
+
+diff --git a/src/gba/hardware.c b/src/gba/hardware.c
+index c2c19d50..fdc9bf02 100644
+--- a/src/gba/hardware.c
++++ b/src/gba/hardware.c
+@@ -377,11 +377,19 @@ void GBAHardwareInitRumble(struct GBACartridgeHardware* hw) {
+ 
+ void _rumbleReadPins(struct GBACartridgeHardware* hw) {
+ 	struct mRumble* rumble = hw->p->rumble;
++	static int lastState = 0;
++	int state;
+ 	if (!rumble) {
+ 		return;
+ 	}
+ 
+-	rumble->setRumble(rumble, !!(hw->pinState & 8));
++	state = (!!(hw->pinState & 8));
++	rumble->setRumble(rumble, state);
++	if (state == lastState)
++		return;
++	printf ("RUMBLE: [%s] %u\n", state ? "START" : "STOP", mTimingCurrentTime(&hw->p->timing));
++	fprintf (stderr, "%u, %d\n", mTimingCurrentTime(&hw->p->timing), state);
++	lastState = state;
+ }
+ 
+ // == Light sensor
+-- 
+2.20.1
+
